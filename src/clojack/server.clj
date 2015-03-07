@@ -12,7 +12,7 @@
 (defn enable-logging
   []
   (log/set-config! [:appenders :spit :enabled?] true)
-  (log/set-config! [:shared-appender-config :spit-filename]
+  (log/set-config! [:shared-appender-config :rolling]
                    (or (env :logfile) "clojack.log")))
 
 (defn pinger
