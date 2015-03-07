@@ -28,10 +28,13 @@
 (defn event-loop
   [ws-stream]
   (pinger ws-stream)
-  (loop []
-    (when-let [msg @(s/take! ws-stream)]
-      (-> msg (json/read-str :key-fn keyword) (h/handle-message ws-stream))
-      (recur))))
+  (let [plugins (h/load-plugins)]
+    (loop []
+      (when-let [msg @(s/take! ws-stream)]
+        (-> msg
+            (json/read-str :key-fn keyword)
+            (h/handle-message ws-stream plugins))
+        (recur)))))
 
 (defn rtm-start
   "make a synchronous connection to slack and grab the ws url"
