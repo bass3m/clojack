@@ -1,12 +1,242 @@
-(ns clojack.plugins.insult
-  (:require [taoensso.timbre :as log]))
+(ns clojack.plugins.insult)
+
+(def adjs ["acidic"
+           "antique"
+           "contemptible"
+           "culturally-unsound"
+           "despicable"
+           "evil"
+           "fermented"
+           "festering"
+           "foul"
+           "fulminating"
+           "humid"
+           "impure"
+           "inept"
+           "inferior"
+           "industrial"
+           "left-over"
+           "low-quality"
+           "malodorous"
+           "off-color"
+           "penguin-molesting"
+           "petrified"
+           "pointy-nosed"
+           "salty"
+           "sausage-snorfling"
+           "dongle-stealing"
+           "tastless"
+           "tempestuous"
+           "tepid"
+           "tofu-nibbling"
+           "unintelligent"
+           "unoriginal"
+           "uninspiring"
+           "weasel-smelling"
+           "wretched"
+           "spam-sucking"
+           "egg-sucking"
+           "decayed"
+           "regurgitated"
+           "halfbaked"
+           "infected"
+           "squishy"
+           "porous"
+           "pickled"
+           "coughed-up"
+           "thick"
+           "vapid"
+           "hacked-up"
+           "unmuzzled"
+           "bawdy"
+           "vain"
+           "lumpish"
+           "churlish"
+           "fobbing"
+           "rank"
+           "craven"
+           "puking"
+           "jarring"
+           "fly-bitten"
+           "pox-marked"
+           "fen-sucked"
+           "spongy"
+           "droning"
+           "gleeking"
+           "warped"
+           "currish"
+           "milk-livered"
+           "surly"
+           "mammering"
+           "ill-borne"
+           "beef-witted"
+           "tickle-brained"
+           "half-faced"
+           "headless"
+           "wayward"
+           "rump-fed"
+           "onion-eyed"
+           "beslubbering"
+           "villainous"
+           "lewd-minded"
+           "cockered"
+           "full-gorged"
+           "rude-snouted"
+           "crook-pated"
+           "pribbling"
+           "dread-bolted"
+           "fool-born"
+           "puny"
+           "fawning"
+           "sheep-biting"
+           "dankish"
+           "goatish"
+           "weather-bitten"
+           "knotty-pated"
+           "malt-wormy"
+           "saucyspleened"
+           "motley-mind"
+           "it-fowling"
+           "vassal-willed"
+           "loggerheaded"
+           "clapper-clawed"
+           "frothy"
+           "ruttish"
+           "clouted"
+           "common-kissing"
+           "pignutted"
+           "folly-fallen"
+           "plume-plucked"
+           "flap-mouthed"
+           "swag-bellied"
+           "dizzy-eyed"
+           "gorbellied"
+           "weedy"
+           "reeky"
+           "measled"
+           "spur-galled"
+           "mangled"
+           "impertinent"
+           "bootless"
+           "toad-spotted"
+           "hasty-witted"
+           "horn-beat"
+           "yeasty"
+           "boil-brained"
+           "tottering"
+           "hedge-born"
+           "hugger-muggered"
+           "elf-skinned"])
+
+(def amts ["accumulation"
+           "bucket"
+           "coagulation"
+           "enema-bucketful"
+           "gob"
+           "half-mouthful"
+           "heap"
+           "mass"
+           "mound"
+           "petrification"
+           "pile"
+           "puddle"
+           "stack"
+           "thimbleful"
+           "tongueful"
+           "ooze"
+           "quart"
+           "bag"
+           "plate"
+           "ass-full"
+           "assload"])
+
+(def nouns ["bat toenails"
+            "bug spit"
+            "cat hair"
+            "chicken piss"
+            "dog vomit"
+            "dung"
+            "fat-woman's stomach-bile"
+            "fish heads"
+            "guano"
+            "gunk"
+            "pond scum"
+            "rat retch"
+            "red dye number-9"
+            "Sun IPC manuals"
+            "waffle-house grits"
+            "yoo-hoo"
+            "dog balls"
+            "seagull puke"
+            "cat bladders"
+            "pus"
+            "urine samples"
+            "squirrel guts"
+            "snake assholes"
+            "snake bait"
+            "buzzard gizzards"
+            "cat-hair-balls"
+            "rat-farts"
+            "pods"
+            "armadillo snouts"
+            "dangling pointers"
+            "incoming race conditions"
+            "Xilinx builds"
+            "entrails"
+            "snake snot"
+            "eel ooze"
+            "slurpee-backwash"
+            "toxic waste"
+            "Stimpy-drool"
+            "poopy"
+            "poop"
+            "dookie"
+            "big meaty chuds"
+            "fudge dragons"
+            "chocolate hotdogs"
+            "mud monkeys"
+            "monad tutorials"
+            "craptacular carpet droppings"
+            "jizzum"
+            "Tommy Chu fur"
+            "Samantha farts"
+            "cold sores"
+            "anal warts"])
+
+(def vowel? (set "aeiou"))
+
+(defn get-insult-start
+  [adj]
+  (if (vowel? (first adj))
+    "an"
+    "a"))
+
+(defn do-insult
+  [adj1 amt adj2 noun]
+  (clojure.string/join " " ["You're" (get-insult-start adj1) adj1 amt "of" adj2 noun]))
+
+(defn unique-nums
+  [len n1 n2]
+  (loop [n n1
+         m n2]
+    (if (not= n m)
+      [n m]
+      (recur n (rand-int (inc len))))))
+
+(defn generate-insult
+  []
+  (let [len (count adjs)
+        [adj1-idx adj2-idx] (unique-nums len (rand-int len) (rand-int len))
+        adj1 (nth adjs adj1-idx)
+        adj2 (nth adjs adj2-idx)
+        noun (nth nouns (rand-int (count nouns)))
+        amt (nth amts (rand-int (count amts)))]
+    (do-insult adj1 amt adj2 noun)))
 
 (defn run
   []
-  (log/info "Insult message fool")
-  "An fresh insult")
+  (generate-insult))
 
 (defn help
   []
-  (log/info "Help message for insult plugin fool.")
   "*!insult* Get a free-range artisinal insult tailored just for you :trollface:")

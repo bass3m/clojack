@@ -1,5 +1,4 @@
-(ns clojack.plugins.magicball
-  (:require [taoensso.timbre :as log]))
+(ns clojack.plugins.magicball)
 
 (def answers ["As I see it, yes."
               "It is certain."
@@ -24,7 +23,6 @@
 
 (defn run
   []
-  (log/info "8ball message")
   (rand-nth answers))
 
 (def help-msgs ["Make your decisions easier !"
