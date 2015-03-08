@@ -6,11 +6,13 @@
 
 (defn load-plugins
   []
-  (let [ps (into #{} (plugins/list-plugins))]
+  (let [ps (into #{} (plugins/list-plugins))
+        ignored #{"scan"}]
     (log/info "Loading the following plugins:" ps)
     (doseq [p ps]
       (require (symbol (str "clojack.plugins." p))))
-    ps))
+    {:installed ps
+     :ignored ignored}))
 
 (defn plugin-help
   [p]
@@ -25,6 +27,7 @@
 (defn bot-help [msg ws-stream plugins]
   (log/info "HELP message:" msg ":with plugins:" plugins)
   (let [help-msg (->> plugins
+                      :installed
                       (map plugin-help)
                       (clojure.string/join "\n"))]
     @(s/put! ws-stream (json/write-str (slack-response help-msg msg)))))
@@ -44,9 +47,11 @@
 
 (defn bot-cmd
   [cmds msg ws-stream plugins]
-  (if-let [plugin (some plugins cmds)]
-    (plugin-run plugin msg ws-stream)
-    (plugin-not-found msg ws-stream)))
+  (let [plugin (some (:installed plugins) cmds)]
+    (cond
+      plugin (plugin-run plugin msg ws-stream)
+      (some (:ignored plugins) cmds) nil
+      :else (plugin-not-found msg ws-stream))))
 
 (defmulti handle-message
   (fn [msg ws-stream plugins] (:type msg)))
@@ -56,11 +61,13 @@
   (log/info "Incoming Slack message:" msg ":plugins:" plugins)
   (when (:text msg)
     (condp re-find (:text msg)
-      #"^!help\s++|^!help$" :>> (comp
-                                 (fn [msg] (bot-help msg ws-stream plugins))
-                                 (constantly msg))
-      #"^!(\w+)\s++|^!(\w+)$" :>> (fn [bot-cmd-matches]
-                                    (bot-cmd bot-cmd-matches msg ws-stream plugins))
+      #"!help\s++|^!help$|<@\w+>: !help$" :>> (comp
+                                                  (fn [msg] (bot-help msg ws-stream plugins))
+                                                  (constantly msg))
+      #"!(\w+)\s++|^!(\w+)$|<@\w+>: !(\w+)" :>> (fn [bot-cmd-matches]
+                                                  (bot-cmd bot-cmd-matches
+                                                           msg ws-stream
+                                                           plugins))
       (str "Not found"))))
 
 (defmethod handle-message :default
