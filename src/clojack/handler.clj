@@ -7,7 +7,7 @@
 (defn load-plugins
   []
   (let [ps (into #{} (plugins/list-plugins))
-        ignored #{"scan"}]
+        ignored #{"scan" "beer"}]
     (log/info "Loading the following plugins:" ps)
     (doseq [p ps]
       (require (symbol (str "clojack.plugins." p))))
@@ -42,7 +42,9 @@
 
 (defn plugin-run
   [plugin msg ws-stream]
-  (let [output (eval (read-string (str "(clojack.plugins." plugin "/run)")))]
+  (let [output (eval
+                (read-string
+                 (str "(clojack.plugins." plugin "/run " (pr-str msg) ")")))]
     @(s/put! ws-stream (json/write-str (slack-response output msg)))))
 
 (defn bot-cmd
