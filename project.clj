@@ -9,6 +9,7 @@
                  [environ "1.0.0"]
                  [org.clojure/data.json "0.2.5"]
                  [clj-time "0.9.0"]
+                 [enlive "1.1.5"]
                  [com.cemerick/piggieback "0.1.5"]]
   :plugins [[lein-environ "1.0.0"]
             [lein-ancient "0.6.1"]]
