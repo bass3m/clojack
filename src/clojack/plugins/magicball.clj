@@ -22,7 +22,7 @@
               "Very doubtful."])
 
 (defn run
-  []
+  [_]
   (rand-nth answers))
 
 (def help-msgs ["Make your decisions easier !"
