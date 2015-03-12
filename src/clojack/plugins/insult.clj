@@ -156,7 +156,7 @@
             "chicken piss"
             "dog vomit"
             "dung"
-            "fat-woman's stomach-bile"
+            "fat-donkey's stomach-bile"
             "fish heads"
             "guano"
             "gunk"
@@ -198,6 +198,8 @@
             "monad tutorials"
             "craptacular carpet droppings"
             "jizzum"
+            "kernel panics"
+            "sigfaults"
             "Tommy Chu fur"
             "Samantha farts"
             "cold sores"
@@ -213,7 +215,7 @@
 
 (defn do-insult
   [adj1 amt adj2 noun]
-  (clojure.string/join " " ["You're" (get-insult-start adj1) adj1 amt "of" adj2 noun]))
+  (clojure.string/join " " [(get-insult-start adj1) adj1 amt "of" adj2 noun]))
 
 (defn unique-nums
   [len n1 n2]
@@ -234,8 +236,11 @@
     (do-insult adj1 amt adj2 noun)))
 
 (defn run
-  []
-  (generate-insult))
+  [msg]
+  (let [tokens (clojure.string/split (:text msg) #"\s+")]
+  (if (> (count tokens) 1)
+    (str (nth tokens 1) " is " (generate-insult))
+    (str "You're " (generate-insult)))))
 
 (defn help
   []
