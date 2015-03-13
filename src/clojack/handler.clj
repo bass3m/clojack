@@ -7,7 +7,7 @@
 (defn load-plugins
   []
   (let [ps (into #{} (plugins/list-plugins))
-        ignored #{"scan" "beer"}]
+        ignored #{"scan" "beer"}] ;; provides means of disabling plugins
     (log/info "Loading the following plugins:" ps)
     (doseq [p ps]
       (require (symbol (str "clojack.plugins." p))))
@@ -42,18 +42,22 @@
 
 (defn plugin-run
   [plugin msg ws-stream]
-  (let [output (eval
-                (read-string
-                 (str "(clojack.plugins." plugin "/run " (pr-str msg) ")")))]
-    @(s/put! ws-stream (json/write-str (slack-response output msg)))))
+  (try
+    (let [output (eval
+                  (read-string
+                   (str "(clojack.plugins." plugin "/run " (pr-str msg) ")")))]
+      @(s/put! ws-stream (json/write-str (slack-response output msg))))
+    (catch Exception e
+      (log/warn "Failed running plugin:" plugin "Msg" msg)
+      (plugin-not-found msg ws-stream))))
 
 (defn bot-cmd
   [cmds msg ws-stream plugins]
   (let [plugin (some (:installed plugins) cmds)]
     (cond
-      plugin (plugin-run plugin msg ws-stream)
       (some (:ignored plugins) cmds) nil
-      :else (plugin-not-found msg ws-stream))))
+      plugin (plugin-run plugin msg ws-stream)
+      :else nil)))
 
 (defmulti handle-message
   (fn [msg ws-stream plugins] (:type msg)))
@@ -64,12 +68,13 @@
   (when (:text msg)
     (condp re-find (:text msg)
       #"!help\s++|^!help$|<@\w+>: !help$" :>> (comp
-                                                  (fn [msg] (bot-help msg ws-stream plugins))
-                                                  (constantly msg))
-      #"!(\w+)\s++|^!(\w+)$|<@\w+>: !(\w+)" :>> (fn [bot-cmd-matches]
-                                                  (bot-cmd bot-cmd-matches
-                                                           msg ws-stream
-                                                           plugins))
+                                               (fn [msg]
+                                                 (bot-help msg ws-stream plugins))
+                                               (constantly msg))
+      #"!(\w+)\s++(.*)|^!(\w+)$|<@\w+>: !(\w+)" :>> (fn [bot-cmd-matches]
+                                                      (bot-cmd bot-cmd-matches
+                                                               msg ws-stream
+                                                               plugins))
       (str "Not found"))))
 
 (defmethod handle-message :default
