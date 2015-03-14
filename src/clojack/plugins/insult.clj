@@ -21,7 +21,6 @@
            "off-color"
            "penguin-molesting"
            "petrified"
-           "pointy-nosed"
            "salty"
            "sausage-snorfling"
            "dongle-stealing"
